@@ -1,19 +1,29 @@
+// as an extension property, note ext props can't be local
+val Char.scoreProp: Int
+    get() = if (this.isLowerCase()) {
+            this.code - 96
+        } else {
+            this.code - 64 + 26
+        }
+
 fun main() {
     fun log(message: Any?) {
 //        println(message)
     }
 
-    fun score(letter: Char): Int {
-        return if (letter.isLowerCase()) {
-            letter.code - 96
+    fun Char.score(): Int {
+        return if (this.isLowerCase()) {
+            this.code - 96
         } else {
-            letter.code - 64 + 26
+            this.code - 64 + 26
         }
     }
+
     fun part1(input: List<String>): Int {
         return input.sumOf {
             val half = it.length / 2
-            score(it.substring(0, half).toSet().intersect(it.substring(half).toSet()).first())
+            // kind of prefer the non infix for this (see part2)
+            (it.substring(0, half).toSet() intersect it.substring(half).toSet()).first().score()// infix
         }
     }
 
@@ -21,7 +31,7 @@ fun main() {
         return input
             .chunked(3)
             .sumOf {
-            score(it[0].toSet().intersect(it[1].toSet()).intersect(it[2].toSet()).first())
+            it[0].toSet().intersect(it[1].toSet()).intersect(it[2].toSet()).first().scoreProp // not infix :-)
         }
     }
 
