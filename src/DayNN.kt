@@ -1,4 +1,5 @@
 fun main() {
+    @Suppress("unused")
     fun log(message: Any?) {
         println(message)
     }
@@ -14,7 +15,7 @@ fun main() {
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("DayNN_test.txt")
     check(part1(testInput) == 99)
-    //    check(part2(testInput) == 999)
+//    check(part2(testInput) == 999)
 
 
 //    val input = readInput("DayNN.txt")
