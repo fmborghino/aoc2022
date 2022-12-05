@@ -93,3 +93,60 @@ fun main() {
     println(part2(input))
 //    check(part2(input) == 99999)
 }
+
+// NOODLING BELOW FOR IMPROVEMENTS
+private fun day05() {
+    val input = """
+    [D]
+[N] [C]
+[Z] [M] [P]
+ 1   2   3
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+"""
+
+    val numberStacks = numberStacks(input)
+    log("*** $numberStacks")
+    log("*** regex ${buildRegex(3).pattern}")
+    val stacks = parseStacks(input, numberStacks)
+    log("*** dumpStacks\n${stacks.joinToString("\n")}")
+}
+
+private fun parseStacks(input: String, numberStacks: Int): Array<ArrayDeque<Char>> {
+    val r = buildRegex(numberStacks)
+    val stacks: Array<ArrayDeque<Char>> = Array(numberStacks) { ArrayDeque() }
+    input.split("\n")
+        .drop(1)
+        .takeWhile { ! it.startsWith(" 1") }
+        .forEachIndexed() { index, line ->
+            val padded = line.padEnd((numberStacks * 4) - 1, ' ') // makes the regex easier
+            log("parsing padded line $index -> [$padded]")
+            val matches = r.find(padded)
+            for (i in 1.. numberStacks) {
+                val item = matches?.groups?.get(i)?.value
+                log("matched group $i as [$item]")
+                if(item != " ") {
+                    stacks[i - 1].add(item?.get(0) ?: '*')
+                }
+            }
+        }
+    return stacks
+}
+
+private fun numberStacks(input: String): Int {
+    return input.split("\n")
+//        .dropWhile { it.contains("[") }
+//        .first()
+        .first() { it.startsWith(" 1")}
+        .split(" ")
+        .filter { it.isNotBlank() }
+        .max()
+        .toInt()
+}
+
+private fun buildRegex(numberStacks: Int): Regex {
+    return ("." + """([A-Z ])...""".repeat(numberStacks - 1) + "([A-Z ]).").toRegex()
+}
