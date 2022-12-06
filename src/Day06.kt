@@ -7,12 +7,21 @@ fun main() {
 
     fun part1(input: String): Int {
         // whoaa TIL indexOfFirst()
-        return input.windowed(4).indexOfFirst { it.toSet().size == 4 } + 4
+        // windowedSequence or not... need to benchmark really, not obvious
+        return input.windowedSequence(4).indexOfFirst { it.toSet().size == 4 } + 4
+
+// first try
 //        log(input)
 //        val match = input
 //            .windowed(4, 1).map{ it.toSet() }.first { it.size == 4 }.joinToString("")
 //        log(match)
 //        return input.indexOf(match) + 4
+
+// more noodling (based on youtube)
+//        for((index, window) in input.windowedSequence(4).withIndex()) {
+//            if (window.toSet().size == 4) return index + 4
+//        }
+//        return 0
     }
 
     fun part2(input: String): Int {
