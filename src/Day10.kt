@@ -27,7 +27,7 @@ fun main() {
     fun part1(input: List<String>): Int {
         var result = 0
         scanAndDoStuff(input) { cycle, x ->
-            if (cycle == 20 || (cycle - 20) % 40 == 0) {
+            if (cycle == 20 || (cycle - 20) % 40 == 0) { // POST darn this is the same as cycle % 40 == 20
                 val signalStrength = cycle * x
                 result += signalStrength
 //                log("* $cycle -> $x -> $signalStrength -> $result")
