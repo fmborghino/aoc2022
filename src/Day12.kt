@@ -67,26 +67,31 @@ fun main() {
 
     fun part1(input: List<String>): Int {
         val grid = parse(input)
-        val start = findStart(grid, 'S')
+        val start = findStart(grid, 'S') // start at the start
         return bfs(grid, start!!,
             isCandidate = { from, to -> to.height - from.height <= 1 }, // cannot be more than + 1 height from->to
-            isTarget = { node -> node.char == 'E' }
+            isTarget = { node -> node.char == 'E' } // stop at the end
         )
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val grid = parse(input)
+        val start = findStart(grid, 'E') // start at the end
+        return bfs(grid, start!!,
+            isCandidate = { from, to -> from.height - to.height <= 1 }, // cannot be more than + 1 height to->from
+            isTarget = { node -> node.char == 'a' } // stop at any 'a' height
+        )
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day12_test.txt")
     check(part1(testInput) == 31)
-//    check(part2(testInput) == 29)
+    check(part2(testInput) == 29)
 
 
     val input = readInput("Day12.txt")
     println(part1(input))
-//    check(part1(input) == 9999)
-//    println(part2(input))
-//    check(part2(input) == 99999)
+    check(part1(input) == 423)
+    println(part2(input))
+    check(part2(input) == 416)
 }
