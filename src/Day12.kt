@@ -5,18 +5,19 @@ data class Node(val row: Int, val col: Int, var char: Char = '?', var distance: 
         else -> Int.MAX_VALUE // everything else is out of reach
     }
 }
-fun Node.isCandidateNeighborOf(node: Node): Boolean = this.height - 1 <= node.height
 
-typealias Grid = Array<Array<Node>> // eh, marginal value, maybe less readable?
+class Grid(val nodes: Array<Array<Node>>, val start: Node, val end: Node )
 
 fun main() {
     fun log(message: Any?) {
         println(message)
     }
 
-    fun bfs(nodes: Grid, start: Node,
-            isCandidate: (from: Node, to: Node) -> Boolean,
-            isTarget: (Node) -> Boolean): Int {
+    fun bfs(
+        nodes: Array<Array<Node>>, start: Node,
+        isCandidate: (from: Node, to: Node) -> Boolean,
+        isTarget: (Node) -> Boolean
+    ): Int {
         // Create a queue and add start to represent the index of the first node
         start.distance = 0 // make sure we start at 0, not sure if I need the default of -1 yet
         val queue: MutableList<Node> = mutableListOf(start)
@@ -42,17 +43,22 @@ fun main() {
     }
 
     fun parse(input: List<String>): Grid {
-        // List<List<Node>> would be easier to init (none needed) but maybe slower? need to bench test
-        val nodes = Grid(input.size) { row -> Array<Node>(input[0].length) { col ->
-            Node(row, col)}
+        val nodes = Array<Array<Node>>(input.size) { row: Int ->
+            Array<Node>(input[0].length) { col ->
+                Node(row, col)
+            }
         }
-        // is there a way to do this on the initializer without slurping this into another nested array/list
+        var start: Node? = null
+        var end: Node? = null
+
         input.forEachIndexed { row, s ->
             s.forEachIndexed { col, c ->
                 nodes[row][col].char = c
+                if (c == 'S') { start = nodes[row][col] }
+                if (c == 'E') { end = nodes[row][col] }
             }
         }
-        return nodes
+        return Grid(nodes, start!!, end!!)
     }
 
     fun findStart(nodes: Array<Array<Node>>, char: Char): Node? {
@@ -67,8 +73,7 @@ fun main() {
 
     fun part1(input: List<String>): Int {
         val grid = parse(input)
-        val start = findStart(grid, 'S') // start at the start
-        return bfs(grid, start!!,
+        return bfs(grid.nodes, start = grid.start,
             isCandidate = { from, to -> to.height - from.height <= 1 }, // cannot be more than + 1 height from->to
             isTarget = { node -> node.char == 'E' } // stop at the end
         )
@@ -76,8 +81,7 @@ fun main() {
 
     fun part2(input: List<String>): Int {
         val grid = parse(input)
-        val start = findStart(grid, 'E') // start at the end
-        return bfs(grid, start!!,
+        return bfs(grid.nodes, start = grid.end,
             isCandidate = { from, to -> from.height - to.height <= 1 }, // cannot be more than + 1 height to->from
             isTarget = { node -> node.char == 'a' } // stop at any 'a' height
         )
