@@ -14,7 +14,9 @@ fun main() {
         println(message)
     }
 
-    fun bfs(nodes: Grid, start: Node): Int {
+    fun bfs(nodes: Grid, start: Node,
+            isCandidate: (from: Node, to: Node) -> Boolean,
+            isTarget: (Node) -> Boolean): Int {
         // Create a queue and add start to represent the index of the first node
         start.distance = 0 // make sure we start at 0, not sure if I need the default of -1 yet
         val queue: MutableList<Node> = mutableListOf(start)
@@ -28,10 +30,10 @@ fun main() {
                     nodes[node.row].getOrNull(node.col + 1), // right
                     nodes.getOrNull(node.row - 1)?.getOrNull(node.col), // up
                     nodes.getOrNull(node.row + 1)?.getOrNull(node.col), // down
-                ).filter { it.isCandidateNeighborOf(node) } // cannot be more than + 1 height
+                ).filter { isCandidate(node, it) } // fn param checks the height diffs
                 candidates.forEach { candidate -> candidate.distance = node.distance + 1 }
-                candidates.singleOrNull() { candidate -> candidate.char == 'E' }
-                    ?.let { endNode -> return endNode.distance } // we found the end! return the result
+                candidates.singleOrNull() { candidate -> isTarget(candidate) }
+                    ?.let { endNode -> return endNode.distance } // we found the target! return the result
                 queue.addAll(candidates)
                 node.visited = true
             }
@@ -66,8 +68,10 @@ fun main() {
     fun part1(input: List<String>): Int {
         val grid = parse(input)
         val start = findStart(grid, 'S')
-//        log("S is at $start")
-        return bfs(grid, start!!)
+        return bfs(grid, start!!,
+            isCandidate = { from, to -> to.height - from.height <= 1 }, // cannot be more than + 1 height from->to
+            isTarget = { node -> node.char == 'E' }
+        )
     }
 
     fun part2(input: List<String>): Int {
