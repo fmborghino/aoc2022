@@ -9,6 +9,9 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlinx:multik-core:0.2.1")
     implementation("org.jetbrains.kotlinx:multik-default:0.2.1")
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation("org.json:json:20220924")
+
 }
 
 tasks {
