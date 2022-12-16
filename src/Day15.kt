@@ -9,24 +9,17 @@ fun main() {
     data class Node(val c: Char, val beacon: Vec2? = null, val manhattan: Int? = null)
     class Grid(val grid: MutableMap<Vec2, Node>, val rangeX: Pair<Int, Int>, val rangeY: Pair<Int, Int>)
 
-    fun MutableMap<Vec2, Node>.markDiamond(scan: Int, sX: Int, sY: Int) {
-        fun markScanned(x: Int, y: Int) {
-            val node: Node? = this[Vec2(x, y)]
-            if (node == null) {
-                this[Vec2(x, y)] = Node('#')
-            }
-        }
-
+    // generate the positions 1 step outside the manhattan distance
+    fun generateOutsideDiamond(x: Int, y: Int, distance: Int, scanMax: Int): List<Vec2> {
         // paint in a diamond around the S
-        for (x in 0..scan) {
-            for (y in 0..(scan - x)) {
-                if (x == 0 && y == 0) continue
-                markScanned(sX + x, sY - y)
-                markScanned(sX + x, sY + y)
-                markScanned(sX - x, sY - y)
-                markScanned(sX - x, sY + y)
+        return buildList {
+            (0..distance).forEach { i ->
+                add(Vec2(x + i, y - (1 + distance - i)))
+                add(Vec2(x - i, y + (1 + distance - i)))
+                add(Vec2(x - distance - 1 + i, y - i))
+                add(Vec2(x + distance + 1 - i, y + i))
             }
-        }
+        }.filter { it.x in (0..scanMax) && it.y in (0..scanMax)} // wasteful adding and removing <shrug>
     }
 
     // Sensor at x=2, y=18: closest beacon is at x=-2, y=15
@@ -63,10 +56,6 @@ fun main() {
         }
     }
 
-    fun check1(grid: Grid, y: Int): Int {
-        return grid.grid.filter { it.key.y == y }.filter { it.value.c in listOf('#') }.count()
-    }
-
     fun markScanned(grid: Grid, x: Int, y: Int) {
         val node: Node? = grid.grid[Vec2(x, y)]
         if (node == null) {
@@ -98,47 +87,50 @@ fun main() {
         markTargetRow(grid, targetY)
 //        printGrid(grid, expand = 2) // print every node
 
-        return check1(grid, targetY)
+        return grid.grid.filter { it.key.y == targetY }.filter { it.value.c in listOf('#') }.count()
     }
 
-    fun part2(input: List<String>, scanMax: Int): Int {
+    fun part2(input: List<String>, scanMax: Int): Long {
         val grid = parse(input)
-        log("part2 >>> scanMax $scanMax, grid X -> ${grid.rangeX} Y -> ${grid.rangeY}")
         val sensors = grid.grid.filter { it.value.c == 'S' }
-        (0..scanMax).forEach { scanX ->
-            (0..scanMax).forEach loopXY@{ scanY ->
-                if (scanY % 100_000 == 0 && scanX % 100 == 0) {
-                    log("$scanX, $scanY")
+        val fenceNodes = buildSet<Vec2> {
+             sensors.forEach { sensor ->
+                addAll(generateOutsideDiamond(sensor.key.x, sensor.key.y, sensor.value.manhattan!!, scanMax))
+             }
+        }
+        log("part2 >>> sensors ${sensors.size} fenceNodes ${fenceNodes.size}")
+
+        // for each fence node, check the manhattan distance to each node
+        fenceNodes.forEach loopFence@{ here ->
+            sensors.forEach { sensor ->
+                val manhattanSensorToHere = abs(here.x - sensor.key.x) + abs(here.y - sensor.key.y)
+                if (sensor.value.manhattan!! >= manhattanSensorToHere) {
+                    return@loopFence
                 }
-                sensors.forEach { sensor ->
-                    val manhattanSensorToHere: Int = abs(sensor.key.x - scanX) + abs(sensor.key.y - scanY)
-                    if (sensor.value.manhattan!! >= manhattanSensorToHere) {
-                        return@loopXY // this sensor touches this XY location
-                    }
-                }
-                // if we get here, we found an XY location that is not touched by any sensor
-                val result = (4_000_000 * scanX) + scanY
-                log("part2 >>> result $result ($scanX, $scanY)")
-                return result
             }
+            // if we get here, we found an XY location that is not touched by any sensor
+            val result = (4_000_000L * here.x) + here.y
+            log("part2 >>> result $result (${here.x}, ${here.y})")
+            return result
         }
         return -1 // didn't find anything, shouldn't happen!
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day15_test.txt")
-    val test1 = part1(testInput, 10)
+    val test1 = part1(testInput, targetY = 10)
     check(test1 == 26)
     val test2 = part2(testInput, scanMax = 20)
-    check(test2 == 56_000_011)
+    check(test2 == 56_000_011L)
 
-
+    // game inputs part1
     val input = readInput("Day15.txt")
-    val result1 = part1(input, 2_000_000)
+    val result1 = part1(input, targetY = 2_000_000)
     println(result1)
     check(result1 == 4_879_972)
 
-    val result2 = part2(input, 4_000_000)
+    // game inputs part2
+    val result2 = part2(input, scanMax = 4_000_000)
     println(result2)
-//    check(part2(input, y2) == 99999)
+    check(result2 == 12_525_726_647_448L)
 }
